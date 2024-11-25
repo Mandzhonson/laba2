@@ -5,11 +5,33 @@ from tkinter.messagebox import showinfo, askyesno
 
 class Application:
     master: Tk
-
+    canvas: Canvas
+    def draw_empty_field(self):
+        self.canvas.bind_all("<Button-1>",self.left_click)
+        step_x = (self.width//2) // 10
+        step_y = (self.height//2) // 10
+        step = min(step_x,step_y)
+        for i in range(11):
+            x = i * step
+            self.canvas.create_line(x+2*step, step*2, x+2*step, step*12, fill="blue")
+            self.canvas.create_line(x+20*step, step*2, x+20*step, step*12, fill="blue")
+        for i in range(11):
+            y = i * step
+            self.canvas.create_line(step*2, y+2*step,step*12, y+2*step,fill="blue")
+            self.canvas.create_line(step*20, y+2*step,x+20*step, y+2*step,fill="blue")
+        alph = "АБВГДЕЖЗИКЛ"
+        
+        for i in range(10):
+            self.canvas.create_text(step, step * 2 + i * step + step // 2, text=str(i + 1), anchor="w",font="Arial",fill="Blue")
+            self.canvas.create_text(19*step, step * 2 + i * step + step // 2, text=str(i + 1), anchor="w",font="Arial",fill="Blue")
+            self.canvas.create_text(step * 2 + i * step + step // 2, step*2-10, text=alph[i],font="Arial",fill="Blue")
+            self.canvas.create_text(step * 20 + i * step + step // 2, step*2-10, text=alph[i],font="Arial",fill="Blue")
+    def left_click(self,event):
+        pass
     def click_exit(self) -> None:
-        # Операция закрытия приложения через меню
+            # Операция закрытия приложения через меню
         result = askyesno(title="Подтверждение выхода",
-                          message="Вы уверены, что хотите выйти?")
+                      message="Вы уверены, что хотите выйти?")
         if result:
             self.master.destroy()
         else:
@@ -41,30 +63,25 @@ class Application:
         new_game_menu.add_command(label="1 player")
         new_game_menu.add_command(label="2 players")
         setting_menu = Menu(tearoff=0)
+        
 
         screen_resol_menu = Menu(setting_menu, tearoff=0)
         screen_resol_menu.add_command(
-            label="800x600", command=lambda: self.master.geometry("800x600"))
+            label="1280x720", command=lambda: self.create_main(1280,720))
         screen_resol_menu.add_command(
-            label="1024x768", command=lambda: self.master.geometry("1024x768"))
+            label="1366x768", command=lambda: self.create_main(1366,768))
         screen_resol_menu.add_command(
-            label="1280x720", command=lambda: self.master.geometry("1280x720"))
+            label="1440x900", command=lambda: self.create_main(1440,900))
         screen_resol_menu.add_command(
-            label="1366x768", command=lambda: self.master.geometry("1366x768"))
+            label="1600x900", command=lambda: self.create_main(1600,900))
         screen_resol_menu.add_command(
-            label="1440x900", command=lambda: self.master.geometry("1440x900"))
+            label="1920x1080", command=lambda: self.create_main(1920,1080))
         screen_resol_menu.add_command(
-            label="1600x900", command=lambda: self.master.geometry("1600x900"))
+            label="1920x1200", command=lambda: self.create_main(1920,1200))
         screen_resol_menu.add_command(
-            label="1600x1200", command=lambda: self.master.geometry("1600x1200"))
+            label="2560x1080", command=lambda: self.create_main(2560,1080))
         screen_resol_menu.add_command(
-            label="1920x1080", command=lambda: self.master.geometry("1920x1080+0+0"))
-        screen_resol_menu.add_command(
-            label="1920x1200", command=lambda: self.master.geometry("1920x1200+0+0"))
-        screen_resol_menu.add_command(
-            label="2560x1080", command=lambda: self.master.geometry("2560x1080+0+0"))
-        screen_resol_menu.add_command(
-            label="2560x1440", command=lambda: self.master.geometry("2560x1440+0+0"))
+            label="2560x1440", command=lambda: self.create_main(2560,1440))
 
         setting_menu.add_cascade(
             label="Screen Resolution", menu=screen_resol_menu)
@@ -75,6 +92,22 @@ class Application:
         main_menu.add_cascade(label="Exit", command=self.click_exit)
         self.master.config(menu=main_menu)
 
+    def create_main(self,width,height):
+        self.width = width
+        self.height = height
+        if self.canvas is not None:
+            self.canvas.destroy()
+        self.master.geometry(f"{self.width}x{self.height}+0+0")
+        self.canvas=Canvas(master=self.master,bg="white",width=self.width,height=self.height)
+        self.draw_empty_field()
+        self.canvas.pack()
+
+
     def __init__(self, master) -> None:
         self.master = master
+        self.width = 1280
+        self.height = 720
+        self.canvas=None
+        self.create_main(self.width,self.height)
         self.create_menu()
+        self.draw_empty_field()
