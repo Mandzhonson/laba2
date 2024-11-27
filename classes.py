@@ -1,3 +1,4 @@
+import random
 class Player:
     __hits: list
     __defeat_flag: bool
@@ -23,7 +24,22 @@ class Player:
 
     def get_count(self) -> int:
         return self.__count_plain
+    def set_AI(self,AI):
+        self.AI=True
+    def place_random_ships(self):
+        ships_sizes = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
+        random.shuffle(ships_sizes)
 
+        for size in ships_sizes:
+            placed = False
+            while not placed:
+                orientation = random.choice(['horizontal', 'vertical'])
+                x = random.randint(0, 9)
+                y = random.randint(0, 9)
+                
+                if self.can_place_ship(x, y, size, orientation):
+                    self.place_ship(x, y, size, orientation)
+                    placed = True
     def place_ship(self, row, col, ship_length=1, orientation='horizontal'):
         if orientation == 'horizontal':
             if col + ship_length <= 10 and col + ship_length > 0:
