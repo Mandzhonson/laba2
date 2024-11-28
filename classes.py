@@ -1,4 +1,6 @@
 import random
+
+
 class Player:
     __hits: list
     __defeat_flag: bool
@@ -6,7 +8,7 @@ class Player:
     AI: bool
     __count_plain: int
 
-    def __init__(self, AI=False) -> None:
+    def __init__(self, AI: bool = False) -> None:
         self.__hits = [[False for _ in range(10)] for _ in range(10)]
         self.__defeat_flag = False
         self.AI = AI
@@ -27,10 +29,14 @@ class Player:
 
     def set_AI(self, AI):
         self.AI = AI
-    def set_clear_ship(self):
-        self.__count_plain=0
+
+    def set_clear_ship(self) -> None:
+        #когда очищаем поле, очищаем все корабли у игрока
+        self.__count_plain = 0
         self.__ships = [[False for _ in range(10)] for _ in range(10)]
-    def place_random_ships(self):
+
+    def place_random_ships(self) -> None:
+        #рандомная расстановка кораблей на поле(для ИИ)
         ships_sizes = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
         random.shuffle(ships_sizes)
 
@@ -45,7 +51,8 @@ class Player:
                     self.place_ship(x, y, size, orientation)
                     placed = True
 
-    def place_ship(self, row, col, ship_length=1, orientation='horizontal'):
+    def place_ship(self, row: int, col: int, ship_length: int = 1, orientation: str = 'horizontal') -> None:
+        #расстановка кораблей вручную
         if orientation == 'horizontal':
             for i in range(ship_length):
                 self.__ships[row][col + i] = True
@@ -55,7 +62,8 @@ class Player:
                 self.__ships[row + i][col] = True
             self.__count_plain += 1
 
-    def delete_ship(self, row, col, ship_length, orientation='horizontal'):
+    def delete_ship(self, row: int, col: int, ship_length: int, orientation: str = 'horizontal') -> None:
+        #отмена последнего действия и соотвественно удаление корабля с поля
         if orientation == "horizontal":
             for i in range(ship_length):
                 self.__ships[row][col + i] = False
@@ -64,7 +72,8 @@ class Player:
                 self.__ships[row + i][col] = False
         self.__count_plain -= 1
 
-    def can_place_ship(self, row, col, size, orientation):
+    def can_place_ship(self, row: int, col: int, size: int, orientation: str) -> bool:
+        #проверка на возможность постановки корабля
         if orientation == 'horizontal' and col + size > 10:
             return False
         if orientation == 'vertical' and row + size > 10:
@@ -83,7 +92,8 @@ class Player:
                             return False
         return True
 
-    def make_shot(self, row, col):
+    def make_shot(self, row: int, col: int) -> bool:
+        #выстрел
         if self.__hits[row][col]:
             return False
 
@@ -95,19 +105,24 @@ class Player:
                 self.__defeat_flag = True
             return True
         return False
-    def is_ship_sunk(self, ship_cells):
+
+    def is_ship_sunk(self, ship_cells: list) -> bool:
+        #проверка на утопленный корабль
         for x, y in ship_cells:
             if not self.get_hits()[x][y]:
                 return False
         return True
 
-    def all_ships_sunk(self):
+    def all_ships_sunk(self) -> bool:
+        #проверка:уничтожены ли все корабли
         for row in range(10):
             for col in range(10):
                 if self.__ships[row][col] and not self.__hits[row][col]:
                     return False
         return True
-    def get_surrounding(self, x, y):
+
+    def get_surrounding(self, x: int, y: int) -> list:
+        #вычисление координат вокруг корабля
         surrounding_cells = []
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
@@ -115,7 +130,9 @@ class Player:
                 if 0 <= nx < 10 and 0 <= ny < 10:
                     surrounding_cells.append((nx, ny))
         return surrounding_cells
-    def get_ship_cells(self, x, y):
+
+    def get_ship_cells(self, x: int, y: int) -> list:
+        #вычисление координат, которые присуще кораблю
         ship_cells = [(x, y)]
         ny = y - 1
         while ny >= 0 and self.__ships[x][ny]:

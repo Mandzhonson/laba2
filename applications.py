@@ -1,10 +1,26 @@
 from tkinter import *
-from tkinter.messagebox import showinfo, showerror,askyesno
+from tkinter.messagebox import showinfo, showerror, askyesno
 from classes import Player
 from random import randint
 
+
 class Application:
     master: Tk
+    pl1: Player
+    pl2: Player
+    fl_pl2: bool
+    current_player: Player
+    enemy_player: Player | None
+    field_pl1: Canvas
+    field_pl2: Canvas
+    btn1: Button
+    btn2: Button
+    btn_clear: Button | None
+    btn_cancel: Button | None
+    orientation_var: StringVar
+    horizontal_radio: Radiobutton | None
+    vertical_radio: Radiobutton | None
+
     def __init__(self, master):
         self.master = master
         self.master.title("Морской бой")
@@ -13,29 +29,40 @@ class Application:
         self.pl2 = Player(True)
         self.fl_pl2 = False
         self.current_player = self.pl1
-        self.field_pl1 = Canvas(master=self.master, bg="white", width=550, height=550)
-        self.field_pl2 = Canvas(master=self.master, bg="white", width=550, height=550)
+        self.field_pl1 = Canvas(
+            master=self.master, bg="white", width=550, height=550)
+        self.field_pl2 = Canvas(
+            master=self.master, bg="white", width=550, height=550)
         self.field_pl1.pack(side=LEFT, padx=10, pady=10)
         self.field_pl2.pack(side=RIGHT, padx=10, pady=10)
         self.draw_field(self.field_pl1, self.pl1)
         self.draw_field(self.field_pl2, self.pl2)
-        self.btn1 = Button(self.master, text="1 игрок", command=lambda: (self.pl2.set_AI(True), self.start_game()))
-        self.btn2 = Button(self.master, text="2 игрока", command=lambda: (self.set_fl(True), self.start_game()))
-        self.btn_clear = Button(self.master, text="Очистить поле", command=lambda: self.clear_field(self.current_player))
+        self.btn1 = Button(self.master, text="1 игрок", command=lambda: (
+            self.pl2.set_AI(True), self.start_game()))
+        self.btn2 = Button(self.master, text="2 игрока", command=lambda: (
+            self.set_fl(True), self.start_game()))
+        self.btn_clear = Button(self.master, text="Очистить поле",
+                                command=lambda: self.clear_field(self.current_player))
+        self.orientation_var = StringVar(value='horizontal')
+        self.horizontal_radio = self.vertical_radio = None
+        self.btn_cancel = None
         self.btn1.pack()
         self.btn2.pack()
+
     def click_exit(self) -> None:
-            # Операция закрытия приложения через меню
+        # Операция закрытия приложения через меню
         result = askyesno(title="Подтверждение выхода",
-                      message="Вы уверены, что хотите выйти?")
+                          message="Вы уверены, что хотите выйти?")
         if result:
             self.master.destroy()
         else:
             showinfo("Отмена операции", "Операция выхода отменена.")
 
-    def set_fl(self,fl):
-        self.fl_pl2=fl
-    def draw_field(self, canvas: Tk, player: Player):
+    def set_fl(self, fl: bool) -> None:
+        self.fl_pl2 = fl
+
+    def draw_field(self, canvas: Tk, player: Player) -> None:
+        #рисуем поле,исходя из массива кораблей игрока(если есть,то рисуем и корабль)
         cell_size = 50
         for row in range(10):
             for col in range(10):
@@ -55,7 +82,9 @@ class Application:
                                2, cell_size // 2, text=alph[i])
             canvas.create_text(cell_size // 2, (i + 1) *
                                cell_size + cell_size // 2, text=str(i + 1))
-    def draw_field_empty(self,canvas):
+
+    def draw_field_empty(self, canvas: Canvas) -> None:
+        #рисовка просто пустого поля
         cell_size = 50
         for row in range(10):
             for col in range(10):
@@ -71,7 +100,9 @@ class Application:
                                2, cell_size // 2, text=alph[i])
             canvas.create_text(cell_size // 2, (i + 1) *
                                cell_size + cell_size // 2, text=str(i + 1))
-    def click_mouse(self, event):
+
+    def click_mouse(self, event) -> None:
+        #обработка нажатия ЛКМ(расстановка кораблей)
         canvas = self.field_pl1 if self.current_player == self.pl1 else self.field_pl2
         y = event.x // 50 - 1
         x = event.y // 50 - 1
@@ -107,49 +138,58 @@ class Application:
                     self.btn_cancel = Button(
                         master=self.master,
                         text="Отмена действия",
-                        command=lambda: self.cancel_plain(x, y, size, orientation,canvas)
+                        command=lambda: self.cancel_plain(
+                            x, y, size, orientation, canvas)
                     )
                     self.btn_cancel.pack()
                 else:
                     self.btn_cancel.destroy()
-                    showerror(title="Ошибка", message="Нельзя расположить корабли на данных клетках")
+                    showerror(
+                        title="Ошибка", message="Нельзя расположить корабли на данных клетках")
                 if self.current_player.get_count() == 10:
                     if self.fl_pl2 and self.current_player == self.pl1:
                         self.btn_cancel.destroy()
                         self.horizontal_radio.destroy()
                         self.vertical_radio.destroy()
-                        self.horizontal_radio=self.vertical_radio=None
+                        self.horizontal_radio = self.vertical_radio = None
                         self.current_player = self.pl2
                         self.field_pl1.unbind("<Button-1>")
                         self.field_pl2.bind("<Button-1>", self.click_mouse)
                         self.field_pl1.delete("all")
-                        showinfo("Подсказка", "Теперь расставляет корабли игрок 2 на правом поле.")
+                        showinfo(
+                            "Подсказка", "Теперь расставляет корабли игрок 2 на правом поле.")
                     elif not self.fl_pl2 and self.current_player == self.pl1:
                         self.btn_cancel.destroy()
                         self.horizontal_radio.destroy()
                         self.vertical_radio.destroy()
+                        self.vertical_radio = self.horizontal_radio = self.btn_cancel = None
                         self.pl2.place_random_ships()
                         self.end_preparation()
                     else:
                         self.end_preparation()
-    def clear_field(self,player):
+
+    def clear_field(self, player: Player) -> None:
+        #кнопка очистка поля во время расстановки кораблей
         self.btn_cancel.destroy()
-        self.btn_cancel=None
+        self.btn_cancel = None
         player.set_clear_ship()
-        if player==self.pl1:
+        if player == self.pl1:
             self.field_pl1.delete("all")
             self.draw_field_empty(self.field_pl1)
         else:
             self.field_pl2.delete("all")
             self.draw_field_empty(self.field_pl2)
-    def end_preparation(self):
+
+    def end_preparation(self) -> None:
+        #завершение расстановки кораблей и начало игры
         self.btn_clear.destroy()
-        showinfo("Игра началась", "Оба игрока разместили корабли. Начинаем сражение! Ход за 1 игроком.")
+        showinfo("Игра началась",
+                 "Оба игрока разместили корабли. Начинаем сражение! Ход за 1 игроком.")
         self.field_pl1.unbind("<Button-1>")
         self.field_pl2.unbind("<Button-1>")
         self.current_player = self.pl1
         self.enemy_player = self.pl2
-    
+
         if self.fl_pl2:
             self.field_pl2.delete("all")
             self.draw_field_empty(self.field_pl1)
@@ -161,35 +201,38 @@ class Application:
         else:
             self.field_pl2.bind("<Button-1>", self.game)
         showinfo("Ход", "Ход игрока 1.")
-    def cancel_plain(self, x, y, size, orientation,canvas):
+
+    def cancel_plain(self, x: int, y: int, size: int, orientation: str, canvas: Canvas) -> None:
+        #отмена последнего действия
         self.current_player.delete_ship(x, y, size, orientation)
         canvas.delete("all")
         self.draw_field(canvas, self.current_player)
         if self.btn_cancel is not None:
             self.btn_cancel.destroy()
 
-    def switch_player(self):
-        if self.current_player == self.pl1:
-            self.current_player = self.pl2
-            self.enemy_player = self.pl1
-            showinfo("Ход", "Ход игрока 2.")
-            self.field_pl2.bind("<Button-1>", self.game)
-            self.field_pl1.unbind("<Button-1>")
-
-        else:
-            self.current_player = self.pl1
-            self.enemy_player = self.pl2
-            showinfo("Ход", "Ход игрока 1.")
-            self.field_pl1.bind("<Button-1>", self.game)
-            self.field_pl2.unbind("<Button-1>")
-
-    def start_game(self):
+    def start_game(self, flag: bool = True) -> None:
+        #запуск приложения и нажатия одной из кнопки(1 игрок/2 игрока)
         showinfo("Подсказка", "Разместите корабли. Управление:\nЛКМ - постановка корабля\nКнопка \"Отмена действия\" - удаляет последний поставленный корабль")
         self.field_pl1.bind("<Button-1>", self.click_mouse)
-        self.btn1.destroy()
-        self.btn2.destroy()
-        self.btn_clear.pack()
-    def game(self, event):
+        if flag:
+            self.btn1.destroy()
+            self.btn2.destroy()
+            self.btn_clear.pack()
+        else:
+            self.btn1.destroy()
+            self.btn2.destroy()
+            self.pl1.set_clear_ship()
+            self.pl2.set_clear_ship()
+            self.btn_clear = Button(self.master, text="Очистить поле",
+                                    command=lambda: self.clear_field(self.current_player))
+            self.field_pl1.delete("all")
+            self.field_pl2.delete("all")
+            self.draw_field_empty(self.field_pl1)
+            self.draw_field_empty(self.field_pl2)
+            self.btn_clear.pack()
+
+    def game(self, event) -> None:
+        #логика игры
         canvas = self.field_pl2 if self.current_player == self.pl1 else self.field_pl1
         enemy_player = self.pl2 if self.current_player == self.pl1 else self.pl1
         y = event.x // 50 - 1
@@ -208,7 +251,8 @@ class Application:
                 if enemy_player.is_ship_sunk(ship_cells):
                     self.mark_surrounding(enemy_player, canvas, ship_cells)
                 if enemy_player.all_ships_sunk():
-                    showinfo("Конец игры", f"Победил {('Игрок 1' if self.current_player == self.pl1 else 'Игрок 2')}!")
+                    showinfo("Конец игры", f"Победил {
+                             ('Игрок 1' if self.current_player == self.pl1 else 'Игрок 2')}!")
                     return
                 return
         else:
@@ -219,7 +263,9 @@ class Application:
             self.ai_move()
         else:
             self.switch_player()
-    def ai_move(self):
+
+    def ai_move(self) -> None:
+        #ход ИИ
         while True:
             x, y = randint(0, 9), randint(0, 9)
             if not self.pl1.get_hits()[x][y]:
@@ -229,13 +275,16 @@ class Application:
                 if hit:
                     ship_cells = self.pl1.get_ship_cells(x, y)
                     if self.pl1.is_ship_sunk(ship_cells):
-                        self.mark_surrounding(self.pl1, self.field_pl1, ship_cells)
+                        self.mark_surrounding(
+                            self.pl1, self.field_pl1, ship_cells)
                     if self.pl1.all_ships_sunk():
                         showinfo("Конец игры", "ИИ победил!")
                     continue
 
                 break
-    def mark_surrounding(self, player, canvas, ship_cells):
+
+    def mark_surrounding(self, player: Player, canvas: Canvas, ship_cells: list) -> None:
+        #Если корабль уничтожен, закрашиваем поля вокруг(работает не совсем корректно)
         marked_cells = set()
 
         for x, y in ship_cells:
@@ -249,10 +298,13 @@ class Application:
                                 marked_cells.add((nx, ny))
                                 canvas.create_oval(
                                     ny * 50 + 50 + 10, nx * 50 + 50 + 10,
-                                    (ny + 1) * 50 + 50 - 10, (nx + 1) * 50 + 50 - 10,
+                                    (ny + 1) * 50 + 50 -
+                                    10, (nx + 1) * 50 + 50 - 10,
                                     outline='blue', fill='blue'
                                 )
-    def switch_player(self):
+
+    def switch_player(self) -> None:
+        #смена хода
         if self.current_player == self.pl1:
             self.current_player = self.pl2
             self.enemy_player = self.pl1
@@ -267,7 +319,9 @@ class Application:
             self.field_pl1.unbind("<Button-1>")
             self.field_pl2.unbind("<Button-1>")
             self.field_pl2.bind("<Button-1>", self.game)
+
     def draw_hit(self, canvas, x, y, hit=True):
+        #рисовка попаданий
         cell_size = 50
         x1 = y * cell_size + cell_size
         y1 = x * cell_size + cell_size
@@ -279,13 +333,16 @@ class Application:
             canvas.create_line(x1, y2, x2, y1, fill="red", width=2)
         else:
             canvas.create_oval(x1 + 10, y1 + 10, x2 - 10, y2 - 10, fill="blue")
-    def create_menu(self):
+
+    def create_menu(self) -> None:
+        #создание менюшки
         main_menu = Menu(self.master)
         new_game_menu = Menu(tearoff=0)
-        new_game_menu.add_command(label="1 player",command=lambda: (self.pl2.set_AI(True), self.start_game()))
-        new_game_menu.add_command(label="2 players",command=lambda: (self.set_fl(True), self.start_game()))
+        new_game_menu.add_command(label="1 player", command=lambda: (
+            self.pl2.set_AI(True), self.start_game(False)))
+        new_game_menu.add_command(label="2 players", command=lambda: (
+            self.set_fl(True), self.start_game(False)))
         setting_menu = Menu(tearoff=0)
-        
 
         screen_resol_menu = Menu(setting_menu, tearoff=0)
         screen_resol_menu.add_command(
@@ -313,7 +370,8 @@ class Application:
         main_menu.add_cascade(label="Settings", menu=setting_menu)
         main_menu.add_cascade(label="Exit", command=self.click_exit)
         self.master.config(menu=main_menu)
-    def rules(self):
+
+    def rules(self) -> None:
         # окно с правилами игры
         rul = Tk()
         rul.title("Правила игры")
